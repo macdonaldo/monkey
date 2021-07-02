@@ -63,6 +63,7 @@ fn eval_minus_prefix_operator_expression(right: Object) -> Result<Object, String
 fn eval_infix_expression(operator: &str, left: Object, right: Object) -> Result<Object, String> {
     match (&left, &right) {
         (Object::Integer{value: l}, Object::Integer{value: r}) => eval_integer_infix_expression(operator, *l, *r),
+        (Object::Boolean{value: l}, Object::Boolean {value: r}) => eval_boolean_infix_expression(operator, *l, *r),
         _ => Err(format!("eval infix expression failed for left:{}, right:{}", left, right)),
     }
 }
@@ -73,6 +74,18 @@ fn eval_integer_infix_expression(operator: &str, left: i64, right: i64) -> Resul
         "-" => Ok(Object::Integer{value: left - right}),
         "*" => Ok(Object::Integer{value: left * right}),
         "/" => Ok(Object::Integer{value: left / right}),
+        ">" => Ok(Object::Boolean{value: left > right}),
+        "<" => Ok(Object::Boolean{value: left < right}),
+        "==" => Ok(Object::Boolean{value: left == right}),
+        "!=" => Ok(Object::Boolean{value: left != right}),
         _ => Err(format!("eval integer infix expression faileds for left:{}, right:{}", left, right)),
+    }
+}
+
+fn eval_boolean_infix_expression(operator: &str, left: bool, right: bool) -> Result<Object, String> {
+    match operator {
+        "==" => Ok(Object::Boolean{value: left == right}),
+        "!=" => Ok(Object::Boolean{value: left != right}),
+        _ => Err(format!("eval boolean infix expression faileds for left:{}, right:{}", left, right)),
     }
 }
