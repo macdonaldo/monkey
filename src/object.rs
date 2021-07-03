@@ -4,6 +4,7 @@ pub enum Object {
     Integer{value: i64},
     Boolean{value: bool},
     Null,
+    ReturnValue{value: Box<Object>}
 }
 
 impl Object {
@@ -12,6 +13,7 @@ impl Object {
             Object::Integer {..} => "INTEGER",
             Object::Boolean {..} => "BOOLEAN",
             Object::Null => "NULL",
+            Object::ReturnValue {..} => "RETURN_VALUE",
         };
         t.to_string()
     }
@@ -27,6 +29,7 @@ impl fmt::Display for Object {
             Object::Integer {value } => write!(f, "{}", value),
             Object::Boolean { value } => write!(f, "{}", value),
             Object::Null => write!(f, "null"),
+            Object::ReturnValue {value} => write!(f, "{}", value.inspect()),
         }
     }
 }
