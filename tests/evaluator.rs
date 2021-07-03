@@ -110,3 +110,31 @@ fn test_bang_operator() {
         test_boolean_object(&evaluated, *expected);
     }
 }
+
+#[test]
+fn test_if_else_expression() {
+    let tests = vec![
+        ("if (true) { 10 }", "10"),
+        ("if (false) { 10 }", "null"),
+        ("if (1) { 10 }", "10"),
+        ("if (1 < 2) { 10 }", "10"),
+        ("if (1 > 2) { 10 }", "null"),
+        ("if (1 > 2) { 10 } else { 20 }", "20"),
+        ("if (1 < 2) { 10 } else { 20 }", "10"),
+    ];
+
+    for (input, expected) in tests {
+        let evaluated = test_eval(input);
+        match i64::from_str_radix(expected, 10) {
+            Ok(n) => test_integer_object(&evaluated, n),
+            _ => test_null_object(&evaluated),
+        }
+    }
+}
+
+fn test_null_object(obj: &Object) {
+    match obj {
+        Object::Null => (),
+        _ => assert!(false, "object is not NULL, got {}", obj),
+    }
+}

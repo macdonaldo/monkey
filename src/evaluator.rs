@@ -1,25 +1,31 @@
 use crate::ast::*;
 use crate::object::*;
 
-// const TRUE: &Object = &Object::Boolean{value: true};
-// const FALSE: &Object = &Object::Boolean{value: false};
-
 pub fn eval(node: Node) -> Result<Object, String> {
     match node {
-        Node::Expr(Expression::IntegerLiteral{token:_, value}) => Ok(Object::Integer{value}),
-        Node::Expr(Expression::Boolean{token:_, value}) => Ok(Object::Boolean{value}),
-        Node::Stmt(Statement::Expression{token:_, expression}) => eval(Node::Expr(expression)),
         Node::Prog(Program { statements, errors:_ }) => eval_statements(statements),
-        Node::Expr(Expression::Prefix{operator, right}) => {
-            let right = eval(Node::Expr(*right))?;
-            eval_prefix_expression(&operator.to_string(), right)
-        },
-        Node::Expr(Expression::Infix{operator, left, right}) => {
-            let right = eval(Node::Expr(*right))?;
-            let left = eval(Node::Expr(*left))?;
-            eval_infix_expression(&operator.to_string(), left, right)
-        },
-        _ => Err(format!("eval failed for {}", node)),
+        Node::Stmt(statement) => match statement {
+            Statement::Expression{token:_, expression} => eval(Node::Expr(expression)),
+            Statement::Block{token:_, statements} => eval_statements(statements),
+            _ => Err(format!("eval failed for {}", statement)),
+        }
+        Node::Expr(expression) => {
+            match expression {
+                Expression::If{..} => eval_if_expression(expression),
+                Expression::IntegerLiteral{token:_, value} => Ok(Object::Integer{value}),
+                Expression::Boolean{token:_, value} => Ok(Object::Boolean{value}),
+                Expression::Prefix{operator, right} => {
+                    let right = eval(Node::Expr(*right))?;
+                    eval_prefix_expression(&operator.to_string(), right)
+                },
+                Expression::Infix{operator, left, right} => {
+                    let right = eval(Node::Expr(*right))?;
+                    let left = eval(Node::Expr(*left))?;
+                    eval_infix_expression(&operator.to_string(), left, right)
+                },
+                _ => Err(format!("eval failed for {}", expression)),
+            }
+        }
     }
 }
 
@@ -87,5 +93,30 @@ fn eval_boolean_infix_expression(operator: &str, left: bool, right: bool) -> Res
         "==" => Ok(Object::Boolean{value: left == right}),
         "!=" => Ok(Object::Boolean{value: left != right}),
         _ => Err(format!("eval boolean infix expression faileds for left:{}, right:{}", left, right)),
+    }
+}
+
+fn eval_if_expression(expression: Expression) -> Result<Object, String> {
+    match expression {
+        Expression::If{token:_, condition, consequence, alternative} => {
+            let condition = eval(Node::Expr(*condition))?;
+            if is_truthy(condition) {
+                return eval(Node::Stmt(*consequence));
+            }
+
+            if let Some(alt) = alternative {
+                return eval(Node::Stmt(*alt));
+            }
+            Ok(Object::Null)
+        },
+        _ => return Err("expression is not If expression".to_string()),
+    }
+}
+
+fn is_truthy(obj: Object) -> bool {
+    match obj {
+        Object::Null => false,
+        Object::Boolean{value} => value,
+        _ => true,
     }
 }
