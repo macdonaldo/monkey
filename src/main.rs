@@ -6,7 +6,6 @@ mod object;
 mod parser;
 mod token;
 
-use ast::*;
 use evaluator::*;
 use lexer::*;
 use object::*;
@@ -60,7 +59,7 @@ fn main() -> io::Result<()> {
             print_parser_errors(&program.errors);
             continue;
         }
-        let evaluated = eval(Node::Prog(program), &mut env);
+        let evaluated = eval(program, &mut env);
         if let Ok(obj) = evaluated {
             match obj {
                 Object::Null => (),

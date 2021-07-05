@@ -1,22 +1,6 @@
 use crate::token::*;
 use std::fmt;
 
-pub enum Node {
-    Expr(Expression),
-    Stmt(Statement),
-    Prog(Program),
-}
-
-impl fmt::Display for Node {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Node::Expr(expression) => write!(f, "{}", expression),
-            Node::Stmt(statement) => write!(f, "{}", statement),
-            Node::Prog(program) => write!(f, "{}", program),
-        }
-    }
-}
-
 #[derive(Debug, Eq, Hash, PartialEq, Clone)]
 pub enum Statement {
     Let {

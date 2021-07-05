@@ -3,6 +3,97 @@ use std::collections::HashMap;
 use crate::ast::*;
 use crate::object::*;
 
+pub trait Evaluation {
+    fn evaluate(self, env: &mut Environment) -> Result<Object, String>;
+}
+
+impl Evaluation for Program {
+    fn evaluate(self, env: &mut Environment) -> Result<Object, String> {
+        match self {
+            Program {
+                statements,
+                errors: _,
+            } => eval_program(statements, env),
+        }
+    }
+}
+
+impl Evaluation for Statement {
+    fn evaluate(self, env: &mut Environment) -> Result<Object, String> {
+        match self {
+            Statement::Expression {
+                token: _,
+                expression,
+            } => eval(expression, env),
+            Statement::Block {
+                token: _,
+                statements,
+            } => eval_block_statement(statements, env),
+            Statement::Return {
+                token: _,
+                return_value,
+            } => {
+                let value = eval(return_value, env)?;
+                Ok(Object::ReturnValue {
+                    value: Box::new(value),
+                })
+            }
+            Statement::Let {
+                token: _,
+                identifier,
+                value,
+            } => {
+                let value = eval(value, env)?;
+                env.set(identifier.to_string(), value);
+                Ok(Object::Null)
+            }
+        }
+    }
+}
+
+impl Evaluation for Expression {
+    fn evaluate(self, env: &mut Environment) -> Result<Object, String> {
+        match self {
+            Expression::If { .. } => eval_if_expression(self, env),
+            Expression::IntegerLiteral { token: _, value } => Ok(Object::Integer { value }),
+            Expression::Boolean { token: _, value } => Ok(Object::Boolean { value }),
+            Expression::Prefix { operator, right } => {
+                let right = eval(*right, env)?;
+                eval_prefix_expression(&operator.to_string(), right)
+            }
+            Expression::Infix {
+                operator,
+                left,
+                right,
+            } => {
+                let right = eval(*right, env)?;
+                let left = eval(*left, env)?;
+                let operator = operator.to_string();
+                eval_infix_expression(operator, left, right)
+            }
+            Expression::Identifier(token) => eval_identifier(&token.to_string(), env),
+            Expression::FunctionLiteral {
+                token: _,
+                parameters,
+                body,
+            } => Ok(Object::Function {
+                parameters,
+                body: *body,
+                env: env.clone(),
+            }),
+            Expression::Call {
+                token: _,
+                function,
+                arguments,
+            } => {
+                let function = eval(*function, env)?;
+                let args = eval_expressions(arguments, env)?;
+                apply_function(function, args)
+            }
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Environment {
     store: HashMap<String, Object>,
@@ -39,79 +130,8 @@ impl Environment {
     }
 }
 
-pub fn eval(node: Node, env: &mut Environment) -> Result<Object, String> {
-    match node {
-        Node::Prog(Program {
-            statements,
-            errors: _,
-        }) => eval_program(statements, env),
-        Node::Stmt(statement) => match statement {
-            Statement::Expression {
-                token: _,
-                expression,
-            } => eval(Node::Expr(expression), env),
-            Statement::Block {
-                token: _,
-                statements,
-            } => eval_block_statement(statements, env),
-            Statement::Return {
-                token: _,
-                return_value,
-            } => {
-                let value = eval(Node::Expr(return_value), env)?;
-                Ok(Object::ReturnValue {
-                    value: Box::new(value),
-                })
-            }
-            Statement::Let {
-                token: _,
-                identifier,
-                value,
-            } => {
-                let value = eval(Node::Expr(value), env)?;
-                env.set(identifier.to_string(), value);
-                Ok(Object::Null)
-            }
-        },
-        Node::Expr(expression) => match expression {
-            Expression::If { .. } => eval_if_expression(expression, env),
-            Expression::IntegerLiteral { token: _, value } => Ok(Object::Integer { value }),
-            Expression::Boolean { token: _, value } => Ok(Object::Boolean { value }),
-            Expression::Prefix { operator, right } => {
-                let right = eval(Node::Expr(*right), env)?;
-                eval_prefix_expression(&operator.to_string(), right)
-            }
-            Expression::Infix {
-                operator,
-                left,
-                right,
-            } => {
-                let right = eval(Node::Expr(*right), env)?;
-                let left = eval(Node::Expr(*left), env)?;
-                let operator = operator.to_string();
-                eval_infix_expression(operator, left, right)
-            }
-            Expression::Identifier(token) => eval_identifier(token.to_string().as_str(), env),
-            Expression::FunctionLiteral {
-                token: _,
-                parameters,
-                body,
-            } => Ok(Object::Function {
-                parameters,
-                body: *body,
-                env: env.clone(),
-            }),
-            Expression::Call {
-                token: _,
-                function,
-                arguments,
-            } => {
-                let function = eval(Node::Expr(*function), env)?;
-                let args = eval_expressions(arguments, env)?;
-                apply_function(function, args)
-            }
-        },
-    }
+pub fn eval<T: Evaluation>(node: T, env: &mut Environment) -> Result<Object, String> {
+    node.evaluate(env)
 }
 
 fn apply_function(function: Object, args: Vec<Object>) -> Result<Object, String> {
@@ -122,7 +142,7 @@ fn apply_function(function: Object, args: Vec<Object>) -> Result<Object, String>
             env,
         } => {
             let mut extended_env = extend_function_env(&env, parameters, args);
-            let evaluated = eval(Node::Stmt(body), &mut extended_env)?;
+            let evaluated = eval(body, &mut extended_env)?;
             unwrap_return_value(evaluated)
         }
         _ => Err(format!("not a function: {}", function.get_type())),
@@ -135,6 +155,13 @@ fn extend_function_env(
     args: Vec<Object>,
 ) -> Environment {
     let mut extend_env = Environment::new_enclosed(current_env);
+    assert!(
+        args.len() == parameters.len(),
+        "argument count does not match parameter count. {} parameters, {} arguments",
+        parameters.len(),
+        args.len()
+    );
+
     for (identifier, arg) in parameters.into_iter().zip(args.into_iter()) {
         extend_env.set(identifier.to_string(), arg);
     }
@@ -152,7 +179,7 @@ fn eval_expressions(exprs: Vec<Expression>, env: &mut Environment) -> Result<Vec
     let mut result = vec![];
 
     for expr in exprs {
-        let evaluated = eval(Node::Expr(expr), env)?;
+        let evaluated = eval(expr, env)?;
         result.push(evaluated);
     }
 
@@ -170,7 +197,7 @@ fn eval_identifier(identifier: &str, env: &mut Environment) -> Result<Object, St
 fn eval_program(statements: Vec<Statement>, env: &mut Environment) -> Result<Object, String> {
     let mut result = Object::Null;
     for statement in statements {
-        result = eval(Node::Stmt(statement), env)?;
+        result = eval(statement, env)?;
 
         if let Object::ReturnValue { value } = result {
             return Ok(*value);
@@ -185,7 +212,7 @@ fn eval_block_statement(
 ) -> Result<Object, String> {
     let mut result = Object::Null;
     for statement in statements {
-        result = eval(Node::Stmt(statement), env)?;
+        result = eval(statement, env)?;
 
         if let Object::ReturnValue { .. } = result {
             return Ok(result);
@@ -306,20 +333,20 @@ fn eval_boolean_infix_expression(
 }
 
 fn eval_if_expression(expression: Expression, env: &mut Environment) -> Result<Object, String> {
-   match expression {
+    match expression {
         Expression::If {
             token: _,
             condition,
             consequence,
             alternative,
         } => {
-            let condition = eval(Node::Expr(*condition), env)?;
+            let condition = eval(*condition, env)?;
             if is_truthy(condition) {
-                return eval(Node::Stmt(*consequence), env);
+                return eval(*consequence, env);
             }
 
             if let Some(alt) = alternative {
-                return eval(Node::Stmt(*alt), env);
+                return eval(*alt, env);
             }
             Ok(Object::Null)
         }

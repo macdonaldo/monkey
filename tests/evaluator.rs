@@ -2,7 +2,6 @@ extern crate monkey;
 
 use std::vec;
 
-use monkey::ast::*;
 use monkey::evaluator::*;
 use monkey::lexer::*;
 use monkey::object::*;
@@ -37,7 +36,7 @@ fn test_eval_integer_expression() {
 fn test_eval(input: &str) -> Object {
     let l = Lexer::new(input.chars().collect());
     let mut p = Parser::new(l);
-    let program = Node::Prog(p.parse_program());
+    let program = p.parse_program();
     let mut env = Environment::new();
     let evaluation = eval(program, &mut env);
     match evaluation {
@@ -201,7 +200,7 @@ fn test_error_handling() {
     for (input, expected) in tests {
         let l = Lexer::new(input.chars().collect());
         let mut p = Parser::new(l);
-        let program = Node::Prog(p.parse_program());
+        let program = p.parse_program();
         let mut env = Environment::new();
         let evaluation = eval(program, &mut env);
         match evaluation {
@@ -265,14 +264,15 @@ fn test_function_application() {
 
 #[test]
 fn test_closures() {
-    let tests = vec![
-        ("
+    let tests = vec![(
+        "
         let newAdder = fn(x) {
             fn(y) { x + y };
         };
         let addTwo = newAdder(2);
-        addTwo(2);", 4),
-    ];
+        addTwo(2);",
+        4,
+    )];
 
     for (input, expected) in tests {
         test_integer_object(&test_eval(input), expected);
