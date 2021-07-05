@@ -46,11 +46,11 @@ impl fmt::Display for Token {
         match self {
             Token::ILLEGAL => write!(f, "Token::Illegal"),
             Token::EOF => write!(f, "Token::EOF"),
-        
+
             // Identifiers + literals
             Token::IDENT(x) => write!(f, "{}", x),
             Token::INT(x) => write!(f, "{}", x),
-        
+
             // Operators
             Token::PLUS => write!(f, "+"),
             Token::ASSIGN => write!(f, "="),
@@ -58,29 +58,29 @@ impl fmt::Display for Token {
             Token::BANG => write!(f, "!"),
             Token::ASTERISK => write!(f, "*"),
             Token::SLASH => write!(f, "/"),
-        
+
             Token::LT => write!(f, "<"),
             Token::GT => write!(f, ">"),
             Token::EQUAL => write!(f, "=="),
             Token::NOTEQUAL => write!(f, "!="),
-        
+
             // Delimiters
-            Token::COMMA => write!(f,  ","),
-            Token::SEMICOLON => write!(f,  ";"),
-        
-            Token::LPAREN => write!(f,  "("),
-            Token::RPAREN => write!(f,  ")"),
-            Token::LBRACE => write!(f,  "{{"),
-            Token::RBRACE => write!(f,  "}}"),
+            Token::COMMA => write!(f, ","),
+            Token::SEMICOLON => write!(f, ";"),
+
+            Token::LPAREN => write!(f, "("),
+            Token::RPAREN => write!(f, ")"),
+            Token::LBRACE => write!(f, "{{"),
+            Token::RBRACE => write!(f, "}}"),
 
             // Keywords
-            Token::FUNCTION => write!(f,  "fn"),
-            Token::LET => write!(f,  "let"),
-            Token::TRUE => write!(f,  "true"),
-            Token::FALSE => write!(f,  "false"),
-            Token::IF => write!(f,  "if"),
-            Token::ELSE => write!(f,  "else"),
-            Token::RETURN => write!(f,  "return"),       
+            Token::FUNCTION => write!(f, "fn"),
+            Token::LET => write!(f, "let"),
+            Token::TRUE => write!(f, "true"),
+            Token::FALSE => write!(f, "false"),
+            Token::IF => write!(f, "if"),
+            Token::ELSE => write!(f, "else"),
+            Token::RETURN => write!(f, "return"),
         }
     }
 }

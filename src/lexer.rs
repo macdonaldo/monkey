@@ -2,9 +2,9 @@ use crate::token::*;
 use std::collections::HashMap;
 pub struct Lexer {
     input: Vec<char>,
-    curr_position: usize,   // current position in input(points to current char)
-    next_position: usize,   // current read position (after current char)
-    character: char,        // current character under examination
+    curr_position: usize, // current position in input(points to current char)
+    next_position: usize, // current read position (after current char)
+    character: char,      // current character under examination
 }
 
 impl Lexer {
@@ -23,8 +23,7 @@ impl Lexer {
     fn read_char(&mut self) {
         if self.next_position >= self.input.len() {
             self.character = '\0';
-        }
-        else {
+        } else {
             self.character = self.input[self.next_position];
         }
         self.curr_position = self.next_position;
@@ -47,11 +46,10 @@ impl Lexer {
                 if self.peek_char() == '=' {
                     self.read_char();
                     Token::EQUAL
-                }
-                else {
+                } else {
                     Token::ASSIGN
                 }
-            },
+            }
             ';' => Token::SEMICOLON,
             '(' => Token::LPAREN,
             ')' => Token::RPAREN,
@@ -65,23 +63,20 @@ impl Lexer {
                 if self.peek_char() == '=' {
                     self.read_char();
                     Token::NOTEQUAL
-                }
-                else {
+                } else {
                     Token::BANG
                 }
-            },
+            }
             '*' => Token::ASTERISK,
             '/' => Token::SLASH,
             '<' => Token::LT,
             '>' => Token::GT,
             _ => {
                 if self.is_letter() {
-                    return self.read_identifier()
-                }
-                else if self.character.is_digit(10) {
+                    return self.read_identifier();
+                } else if self.character.is_digit(10) {
                     return self.read_number();
-                }
-                else {
+                } else {
                     Token::ILLEGAL
                 }
             }
@@ -110,7 +105,10 @@ impl Lexer {
             ("true", Token::TRUE),
             ("false", Token::FALSE),
             ("return", Token::RETURN),
-        ].iter().cloned().collect();
+        ]
+        .iter()
+        .cloned()
+        .collect();
 
         let tok = match kw_map.get(&identifier.as_str()) {
             Some(kw) => (*kw).clone(),
@@ -121,8 +119,7 @@ impl Lexer {
     }
 
     const fn is_letter(&self) -> bool {
-        self.character.is_ascii_alphabetic() ||
-        self.character == '_'
+        self.character.is_ascii_alphabetic() || self.character == '_'
     }
 
     fn skip_whitespace(&mut self) {
@@ -142,7 +139,9 @@ impl Lexer {
             }
             self.read_char();
         }
-        let num_str = self.input[start..self.curr_position].iter().collect::<String>();
+        let num_str = self.input[start..self.curr_position]
+            .iter()
+            .collect::<String>();
         Token::INT(num_str)
     }
 }

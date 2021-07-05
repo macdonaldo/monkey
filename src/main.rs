@@ -1,20 +1,24 @@
 use std::io::{self, Write};
-mod lexer;
-mod token;
-mod parser;
 mod ast;
-mod object;
 mod evaluator;
+mod lexer;
+mod object;
+mod parser;
+mod token;
 
-use lexer::*;
-use parser::*;
 use ast::*;
 use evaluator::*;
+use lexer::*;
+use object::*;
+use parser::*;
 
 fn main() -> io::Result<()> {
+    let mut env = Environment::new();
     let prompt = ">>";
-    println!("Hello mrnugget! This is the Monkey programming language!\nFeel free to type in commands");
-    
+    println!(
+        "Hello mrnugget! This is the Monkey programming language!\nFeel free to type in commands"
+    );
+
     loop {
         print!("{} ", prompt);
         let mut input = String::new();
@@ -56,10 +60,12 @@ fn main() -> io::Result<()> {
             print_parser_errors(&program.errors);
             continue;
         }
-
-        let evaluated = eval(Node::Prog(program));
+        let evaluated = eval(Node::Prog(program), &mut env);
         if let Ok(obj) = evaluated {
-            println!("{}", obj.inspect());
+            match obj {
+                Object::Null => (),
+                _ => println!("{}", obj.inspect()),
+            }
         }
     }
 }
