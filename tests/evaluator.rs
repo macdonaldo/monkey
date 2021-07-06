@@ -33,6 +33,26 @@ fn test_eval_integer_expression() {
     }
 }
 
+#[test]
+fn test_eval_string_expression() {
+    let input = r#""Hello World!""#;
+
+    let l = Lexer::new(input.chars().collect());
+    let mut p = Parser::new(l);
+    let program = p.parse_program();
+    let mut env = Environment::new();
+    let evaluation = eval(program, &mut env);
+    match evaluation {
+        Ok(obj) => match obj {
+            Object::String { value } => assert_eq!(value, "Hello World!"),
+            _ => assert!(false, "object is not String, got {}", obj),
+        },
+        Err(msg) => {
+            assert!(false, "{}", msg);
+        }
+    }
+}
+
 fn test_eval(input: &str) -> Object {
     let l = Lexer::new(input.chars().collect());
     let mut p = Parser::new(l);

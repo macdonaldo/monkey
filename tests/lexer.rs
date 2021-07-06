@@ -32,7 +32,7 @@ fn lexer_1_next_token() {
 
 #[test]
 fn lexer_2_next_token() {
-    let input: &str = "let five = 5;
+    let input: &str = r#"let five = 5;
     let ten = 10;
     
     let add = fn(x, y) {
@@ -53,7 +53,9 @@ fn lexer_2_next_token() {
     10 != 9;
     10 <= 9;
     10 >= 9;
-    ";
+    "foobar"
+    "foo bar"
+    "#;
     let input: Vec<char> = input.chars().collect();
 
     let expected_tokens = vec![
@@ -140,13 +142,15 @@ fn lexer_2_next_token() {
         Token::ASSIGN,
         Token::INT(String::from("9")),
         Token::SEMICOLON,
+        Token::STRING(String::from("foobar")),
+        Token::STRING(String::from("foo bar")),
         Token::EOF,
     ];
 
     let mut l = Lexer::new(input);
 
-    for t in &expected_tokens {
-        let tok = l.next_token();
-        assert_eq!(*t, tok);
+    for expected in &expected_tokens {
+        let actual = l.next_token();
+        assert_eq!(*expected, actual);
     }
 }

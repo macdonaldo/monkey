@@ -8,6 +8,7 @@ pub enum Token {
     // Identifiers + literals
     IDENT(String),
     INT(String),
+    STRING(String),
 
     // Operators
     PLUS,
@@ -50,6 +51,7 @@ impl fmt::Display for Token {
             // Identifiers + literals
             Token::IDENT(x) => write!(f, "{}", x),
             Token::INT(x) => write!(f, "{}", x),
+            Token::STRING(x) => write!(f, "{}", x),
 
             // Operators
             Token::PLUS => write!(f, "+"),

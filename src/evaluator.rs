@@ -71,6 +71,9 @@ impl Evaluation for Expression {
                 let operator = operator.to_string();
                 eval_infix_expression(operator, left, right)
             }
+            Expression::StringLiteral { token } => Ok(Object::String {
+                value: token.to_string(),
+            }),
             Expression::Identifier(token) => eval_identifier(&token.to_string(), env),
             Expression::FunctionLiteral {
                 token: _,

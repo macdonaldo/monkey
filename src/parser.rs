@@ -203,11 +203,18 @@ impl Parser {
             Token::TRUE | Token::FALSE => self.parse_boolean_expression(),
             Token::IF => self.parse_if_expression(),
             Token::FUNCTION => self.parse_function_literal_expression(),
+            Token::STRING(_) => self.parse_string_literal(),
             _ => Err(format!(
                 "no parse prefix function found for {}",
                 self.curr_token
             )),
         }
+    }
+
+    fn parse_string_literal(&self) -> Result<Expression, String> {
+        Ok(Expression::StringLiteral {
+            token: self.curr_token.clone(),
+        })
     }
 
     fn parse_function_literal_expression(&mut self) -> Result<Expression, String> {

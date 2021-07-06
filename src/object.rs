@@ -19,18 +19,22 @@ pub enum Object {
         body: Statement,
         env: Environment,
     },
+    String {
+        value: String,
+    },
 }
 
 impl Object {
     pub fn get_type(&self) -> String {
-        let t = match self {
+        match self {
             Object::Integer { .. } => "INTEGER",
             Object::Boolean { .. } => "BOOLEAN",
             Object::Null => "NULL",
             Object::ReturnValue { .. } => "RETURN_VALUE",
             Object::Function { .. } => "FUNCTION",
-        };
-        t.to_string()
+            Object::String { .. } => "STRING",
+        }
+        .to_string()
     }
 
     pub fn inspect(&self) -> String {
@@ -59,6 +63,7 @@ impl fmt::Display for Object {
                 }
                 write!(f, "fn({}) {{{}}}", parameter_list, *body)
             }
+            Object::String { value } => write!(f, "{}", value),
         }
     }
 }

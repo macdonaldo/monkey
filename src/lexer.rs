@@ -1,5 +1,6 @@
 use crate::token::*;
 use std::collections::HashMap;
+
 pub struct Lexer {
     input: Vec<char>,
     curr_position: usize, // current position in input(points to current char)
@@ -71,6 +72,7 @@ impl Lexer {
             '/' => Token::SLASH,
             '<' => Token::LT,
             '>' => Token::GT,
+            '"' => self.read_string(),
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
@@ -89,7 +91,7 @@ impl Lexer {
     fn read_identifier(&mut self) -> Token {
         let start = self.curr_position;
         loop {
-            if !self.is_letter() {
+            if !self.is_letter() && !self.character.is_digit(10) {
                 break;
             }
 
@@ -124,7 +126,7 @@ impl Lexer {
 
     fn skip_whitespace(&mut self) {
         loop {
-            if ![' ', '\t', '\n', '\r'].iter().any(|&x| x == self.character) {
+            if !matches!(self.character, ' ' | '\t' | '\n' | '\r') {
                 break;
             }
             self.read_char();
@@ -143,5 +145,19 @@ impl Lexer {
             .iter()
             .collect::<String>();
         Token::INT(num_str)
+    }
+
+    fn read_string(&mut self) -> Token {
+        let start = self.curr_position + 1; // skip opening double-quote
+        loop {
+            self.read_char();
+            if matches!(self.character, '"' | '\0') {
+                break;
+            }
+        }
+        let string = self.input[start..self.curr_position]
+            .iter()
+            .collect::<String>();
+        Token::STRING(string)
     }
 }

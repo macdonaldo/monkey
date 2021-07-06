@@ -87,6 +87,9 @@ pub enum Expression {
         function: Box<Expression>, // Expression::Identifier | Expression::FunctionLiteral
         arguments: Vec<Expression>,
     },
+    StringLiteral {
+        token: Token,
+    },
 }
 
 impl fmt::Display for Expression {
@@ -141,6 +144,7 @@ impl fmt::Display for Expression {
                 }
                 write!(f, "{}({})", function, argument_list)
             }
+            Expression::StringLiteral { token } => write!(f, "{}", token.to_string()),
         }
     }
 }

@@ -238,6 +238,36 @@ fn test_integer_literal_expressions() {
     }
 }
 
+#[test]
+fn test_string_literal_expressions() {
+    let input = r#""hello world""#;
+
+    let l = Lexer::new(input.chars().collect());
+    let mut p = Parser::new(l);
+    let program = p.parse_program();
+    check_errors(&program.errors);
+
+    assert_eq!(program.statements.len(), 1);
+    let expr_stmt = &program.statements[0];
+    if let Statement::Expression {
+        token: _,
+        expression,
+    } = expr_stmt
+    {
+        match expression {
+            Expression::StringLiteral { token } => {
+                assert_eq!(token.to_string(), "hello world".to_string());
+            }
+            _ => assert!(false, "expression not StringLiteral, got {}", expression),
+        }
+    } else {
+        assert!(
+            false,
+            "program.statements[0] is not an Expression Statement!"
+        );
+    }
+}
+
 fn test_integer_literal(il: &Expression, value: i64) {
     // Check: Expression is an integer literal
     // Check: IntegerLiteral(Token) is Token::INT(_)
