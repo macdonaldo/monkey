@@ -265,6 +265,9 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> Resul
         (Object::Boolean { value: l }, Object::Boolean { value: r }) => {
             eval_boolean_infix_expression(operator, *l, *r)
         }
+        (Object::String { value: l }, Object::String { value: r }) => {
+            eval_string_infix_expression(operator, l, r)
+        }
         _ => match left.get_type() != right.get_type() {
             true => Err(format!(
                 "type mismatch: {} {} {}",
@@ -279,6 +282,28 @@ fn eval_infix_expression(operator: String, left: Object, right: Object) -> Resul
                 right.get_type()
             )),
         },
+    }
+}
+
+fn eval_string_infix_expression(
+    operator: String,
+    left: &str,
+    right: &str,
+) -> Result<Object, String> {
+    match operator.as_str() {
+        "+" => {
+            let mut value= String::new();
+            value.push_str(left);
+            value.push_str(right);
+            Ok(Object::String{value})
+        },
+        "!=" => {
+            Ok(Object::Boolean{value: left != right})
+        },
+        "==" => {
+            Ok(Object::Boolean{value: left == right})
+        },
+        _ => Err(format!("unknown operator: {} {} {}", "STRING", operator, "STRING")),
     }
 }
 

@@ -215,6 +215,7 @@ fn test_error_handling() {
             "unknown operator: BOOLEAN + BOOLEAN",
         ),
         ("foobar", "identifier not found: foobar"),
+        (r#""Hello" - "World""#, "unknown operator: STRING - STRING"),
     ];
 
     for (input, expected) in tests {
@@ -296,5 +297,29 @@ fn test_closures() {
 
     for (input, expected) in tests {
         test_integer_object(&test_eval(input), expected);
+    }
+}
+
+#[test]
+fn test_string_concatenation() {
+    let input = r#""Hello" + " " + "World!" "#;
+
+    let evaluated = test_eval(input);
+    match evaluated {
+        Object::String { value } => assert_eq!(value, "Hello World!"),
+        _ => assert!(false, "object not String. got {}", evaluated),
+    }
+}
+
+#[test]
+fn test_string_comparison() {
+    let tests = vec![
+        (r#""Hello" == "World!" "#, false),
+        (r#""Hello" == "Hello" "#, true),
+    ];
+
+    for (input, expected) in tests {
+        let evaluated = test_eval(input);
+        test_boolean_object(&evaluated, expected);
     }
 }
